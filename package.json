@@ -1,6 +1,6 @@
 {
   "name": "nanuk-cli",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "MySQL 접속 설정을 준비하고 연결 문제를 한국어로 진단하는 CLI 도구",
   "scripts": {
     "test": "node --test test/cli.test.js"
@@ -9,7 +9,8 @@
     "cli.js",
     "doctor.js",
     "init.js",
-    "assets"
+    "assets",
+    "create-database.js"
   ],
   "engines": {
     "node": "^22.13.0 || >=24.0.0"
