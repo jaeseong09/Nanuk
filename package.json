@@ -25,5 +25,13 @@
     "@inquirer/password": "^5.2.5",
     "dotenv": "^18.0.10",
     "mysql2": "^3.24.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaeseong09/Nanuk.git"
+  },
+  "homepage": "https://github.com/jaeseong09/Nanuk#readme",
+  "bugs": {
+    "url": "https://github.com/jaeseong09/Nanuk/issues"
   }
 }

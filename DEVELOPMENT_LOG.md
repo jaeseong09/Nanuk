@@ -428,3 +428,49 @@ npm publish ./nanuk-cli-0.1.1.tgz --access public
 | 프로필 사진 | Gravatar 변경 후 npm 기본 이미지 유지 | 미측정 | 공개 프로필에서 미반영 확인; 원인 확정 없이 대기 안내 |
 
 참고: AGENTS.md의 React 호출·CORS 연습 미완료 표시는 과거 상태다. 대화에서는 목록 표시, 작성 후 갱신 및 CORS 오류 경험까지 사용자 완료 보고가 있었다. 해당 항목을 이유로 연습을 처음부터 반복하지 않는다.
+
+
+## 0.1.4 로고 확인·ISC 라이선스·GitHub 첫 공개 — 2026-11-17
+
+### 배포 및 README
+
+- 사용자가 nanuk-cli@0.1.4 배포 성공 로그를 공유했고, 로고가 실제로 표시된다고 직접 확인했다. 로고 표시는 사용자 확인 결과이며 에이전트의 브라우저 재검증과 구분한다.
+- 로컬 package.json 버전 0.1.4 및 files의 assets 포함을 확인했다.
+- README의 과거 공개 버전 0.1.2 문구가 남아 있음을 발견했다. 사용자는 README 수정은 다음 업데이트에 묶기로 했다. 앞으로 현재 버전 숫자는 필요한 곳에만 적고 실제 출시 상태와 설명을 맞춘다.
+
+### ISC 라이선스
+
+- 사용자가 기존 ISC 유지 선택. ISC 원문으로 LICENSE를 만들고 연도 2026을 기입했다.
+- 저작권자 이름은 사용자가 입력했다. 현재 저장된 표기는 Copyright (c) 2026 [jaeseong09]이다. 템플릿의 대괄호는 제거하도록 안내했지만 아직 남아 있어 다음 정리 시 확인한다.
+- package.json의 license는 ISC로 유지한다. GitHub도 저장소 라이선스를 ISC로 인식함을 확인했다.
+
+### Git 저장소 분리와 공개
+
+- 초기에는 Git 최상위가 사용자 홈 폴더이고 원격이 CampLog였다. 해당 상위 저장소를 삭제하거나 원격을 변경하지 않았다.
+- 사용자가 Nanuk 폴더에서 git init 후 독립 저장소 경계를 확인했다.
+- .gitignore에 .env, node_modules/, *.tgz, .DS_Store 설정. 에이전트가 git check-ignore로 .env·node_modules·배포 압축 제외를 확인했고 .env가 추적되지 않는 것도 확인했다. 비밀번호 내용은 읽거나 출력하지 않았다.
+- 사용자가 GitHub 저장소 생성 및 첫 커밋 push를 완료했다.
+- 공개 저장소: https://github.com/jaeseong09/Nanuk
+- 기본 브랜치: main. 첫 커밋: 65e215bdbcdeaf7b342b1ae6700d62733d0cff32 (Initial commit).
+- GitHub API의 원격 main 트리를 직접 확인했다. 로컬 첫 커밋과 SHA가 동일했고 README·LICENSE·소스·테스트·로고 2개·개발 기록이 포함됐다.
+- 원격 main 트리에 .env, node_modules, .tgz는 포함되지 않았다. 이는 확인한 현재 커밋 트리 기준이다.
+- 이 기록 추가는 로컬 파일 수정이며 아직 커밋하거나 GitHub로 push하지 않았다.
+
+### 막힘과 해결
+
+| 단계 | 에러·상황 | 걸린 시간 | 해결 방법 |
+|---|---|---|---|
+| 라이선스 | package.json에 ISC만 있고 LICENSE 본문 없음 | 미측정 | 사용자 선택에 따라 ISC 원문 파일 생성, 사용자 이름 입력 |
+| Git 경계 | Nanuk이 홈 폴더의 CampLog 저장소 아래에 있음 | 미측정 | Nanuk 폴더에서 독립 Git 저장소 초기화 |
+| GitHub 공개 | .env가 올라가는지 불안함 | 미측정 | ignore 규칙과 추적 여부 확인, push 후 원격 트리에서도 제외 확인 |
+
+다음 업데이트 전 정리: LICENSE 이름의 대괄호 제거, README 오래된 버전 문구 정리, package.json의 repository/homepage/bugs에 새 GitHub 주소 반영 검토. 지금 기록 변경은 다음 커밋에 포함한다.
+
+
+### 공개 후 문서·메타데이터 정리 — 2026-11-17
+
+- LICENSE 저작권자 이름의 템플릿 대괄호를 제거하여 2026 jaeseong09로 정리했다. ISC 본문은 유지했다.
+- README의 오래된 현재 버전 0.1.2 표기를 최신 npm 링크로 교체했다. 출시된 진단·dotenv 개선의 배포 전 안내를 제거하고 실제 동작에 맞췄다. 기능 도입 시점인 0.1.2/0.1.3 표기는 유지했다.
+- README에 GitHub 소스·이슈·라이선스 링크와 비밀정보를 제외한 오류 제보 안내를 추가했다.
+- package.json에 repository, homepage, bugs를 실제 공개 저장소 주소로 추가했다. 버전과 의존성은 변경하지 않았다.
+- 이 변경과 앞서 추가한 개발 기록은 로컬 수정 상태다. 아직 커밋·push·npm 재배포하지 않았다.
