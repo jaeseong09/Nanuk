@@ -1,0 +1,29 @@
+{
+  "name": "nanuk-cli",
+  "version": "0.1.4",
+  "description": "MySQL 접속 설정을 준비하고 연결 문제를 한국어로 진단하는 CLI 도구",
+  "scripts": {
+    "test": "node --test test/cli.test.js"
+  },
+  "files": [
+    "cli.js",
+    "doctor.js",
+    "init.js",
+    "assets"
+  ],
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  },
+  "bin": {
+    "nanuk": "./cli.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@inquirer/password": "^5.2.5",
+    "dotenv": "^18.0.10",
+    "mysql2": "^3.24.6"
+  }
+}
