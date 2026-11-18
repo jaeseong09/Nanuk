@@ -1,0 +1,5 @@
+table posts {
+  id auto
+  title varchar(100) NOT NULL
+  content text
+}
