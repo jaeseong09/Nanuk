@@ -1,14 +1,14 @@
 # Nanuk — 작업 안내 (AGENTS.md)
 
 이 파일은 Codex 등 코딩 에이전트가 Nanuk 프로젝트의 배경, 결정 사항, 현재 할 일을 한 번에 파악하도록 정리한 문서다.
-최종 정리: 2026-11-18. 현재 상태는 3번, 다음 작업은 7번을 우선 참고한다.
+최종 정리: 2026-11-23. 현재 상태는 3번, 다음 작업은 7번을 우선 참고한다.
 전체 기획서: https://claude.ai/artifact/PkfFjfG2ugmw6gmYCN9d7M
 
 ---
 
 ## 1. 프로젝트 한 줄 정의
 
-**Nanuk**은 MySQL 접속 설정과 연결 진단을 돕는 개발 환경 CLI다. 개발 소스에는 확인 후 DB를 생성하는 기능도 있다. 장기 목표는 React 개발자가 DB 생성·서버 실행·프론트 주소 연결·CORS 설정을 쉽게 끝내도록 하는 것이며, 이 전체 흐름이 현재 구현된 것은 아니다.
+**Nanuk**은 MySQL 접속 설정과 연결 진단을 돕는 개발 환경 CLI다. 공개본은 확인 후 DB를 생성하며, 개발 소스에는 스키마 SQL 미리보기와 테이블 생성 기능도 있다. 장기 목표는 React 개발자가 DB 생성·서버 실행·프론트 주소 연결·CORS 설정을 쉽게 끝내도록 하는 것이며, 이 전체 흐름이 현재 구현된 것은 아니다.
 이름은 이누이트어로 "북극곰"이라는 뜻이다.
 
 ### 범위 결정 (확정)
@@ -36,22 +36,25 @@
 - 설명은 한국어, 순서는: 핵심 → 이유 → 해결 방향 → 필요하면 짧은 예시.
 - 막힌 지점은 `DEVELOPMENT_LOG.md`에 `| 단계 | 에러·상황 | 걸린 시간 | 해결 방법 |` 형식으로 기록하도록 안내한다. 시간을 측정했다면 적고, 측정하지 않았다면 **미측정**으로 남긴다. 추정 수치를 사실처럼 만들지 않는다.
 - 사용자가 직접 겪은 것과 에이전트가 재현한 실험은 기록에서 구분한다.
+- 코드 확인 요청에는 실제 저장 파일을 읽는다. 수정할 함수와 위치를 명확히 짚는다.
+- 정규식은 의미를 설명한 뒤 완성 패턴을 제공한다(사용자 요청).
 
 ---
 
 ## 3. 현재 상태
 
-- 사용자가 npm 0.2.0 배포 완료를 보고했다(2026-11-18). 직후 레지스트리 latest 조회는 아직 0.1.4로 응답하여 공개 반영 확인은 남아 있다. 실행 명령은 `nanuk`.
+- npm 0.2.0 공개 및 공개 패키지 실행 확인 완료. 실행 명령은 `nanuk`. preview/create-table은 0.3.0에 포함되었고 사용자가 공개 반영을 확인했다.
 - GitHub: https://github.com/jaeseong09/Nanuk (main). 프로젝트 자체 Git 저장소이며 상위 홈 폴더의 CampLog 저장소와 구분한다.
 - 라이선스: ISC, LICENSE의 저작권자 표기는 `2026 jaeseong09`.
 - 공개 기능: `init`의 설정 생성·기존 파일 보존·비밀번호 숨김·취소, `doctor`의 누락/공백·포트 검사와 오류 진단, 도움말.
 - **0.2.0에 추가:** `nanuk create-db`. 이름·접속 정보 검증 → SQL 미리보기 → y 확인 → DB 생성. 기본 문자셋/정렬은 utf8mb4/utf8mb4_unicode_ci. 기존 DB를 삭제하거나 덮어쓰지 않는다.
 - `create-database.js`의 자동 main() 호출은 제거했다. CLI에서 명령을 선택할 때 await 호출한다. 직접 파일 실행을 안내하지 않는다.
-- create-db의 files 배열 및 CLI 도움말 반영 완료. package.json과 package-lock.json은 0.2.0으로 맞췄고 README는 0.2.0 배포용으로 정리했다. 배포 완료는 사용자 보고이며 레지스트리 반영·공개본 설치 확인은 별도로 남아 있다.
-- 파일: cli.js, init.js, doctor.js, create-database.js, test/cli.test.js, README.md, DEVELOPMENT_LOG.md, LICENSE, assets/.
+- create-db의 files 배열 및 CLI 도움말 반영 완료. package.json과 package-lock.json은 0.2.0으로 맞췄고 README는 0.2.0 배포용으로 정리했다. 이후 레지스트리 반영과 공개본 실행도 확인했다.
+- 파일: cli.js, init.js, doctor.js, create-database.js, read-schema.js, create-table.js, schema.nanuk, test/cli.test.js, README.md, DEVELOPMENT_LOG.md, LICENSE, assets/.
 - ESM, 의존성 mysql2/dotenv/@inquirer/password. engines: `^22.13.0 || >=24.0.0`.
-- 아직 없는 기능: 테이블 생성, JSON 스키마, dev/API 서버 자동 생성, 프론트 SDK, 프론트 주소 자동 기록, CORS 자동 설정.
-- npm test는 CLI 기본 테스트 2개다. 오류 대역 검사·임시 CLI 실험·사용자 실제 DB 확인은 개발 기록에서 구분하며 영구 테스트에 포함됐다고 설명하지 않는다.
+- 개발 기능: schema.nanuk → parseSchema → buildCreateTableSql. preview는 SQL 출력, create-table은 y 확인 후 실제 생성. 단일 테이블, auto/int/text/varchar(n), NOT NULL 지원. 실제 생성·취소·중복 생성 확인 완료.
+- 아직 없는 기능: 외래키·마이그레이션, dev/API 서버 자동 생성, 프론트 SDK, 프론트 주소 자동 기록, CORS 자동 설정. JSON 대신 간단한 schema.nanuk 문법을 선택했다.
+- npm test는 CLI 기본 2개와 create-table 취소·생성 회귀 7개, 총 9개다. 회귀 검사는 입력·DB 대역을 사용한다. 기타 일회성 검사와 실제 DB 검증은 개발 기록에서 구분한다.
 
 ---
 
@@ -75,7 +78,7 @@
   - `@192.168.65.x` → 당시 Docker 환경에서 관찰한 접속 주소. 주소만으로 환경을 단정하지 않음
 - **거짓 성공 로그 2종**: catch가 에러를 삼켜서 "DB 연결 성공" 출력 / Express 5는 `EADDRINUSE`도 `listen` 콜백으로 넘김.
 - 도커 재시작 직후 약 2분간 `PROTOCOL_CONNECTION_LOST`.
-- SQL 직접 작성 시 `1064`(쉼표, 외래키 괄호) 반복 → JSON 스키마로 SQL을 생성하면 이 단계가 사라짐.
+- SQL 직접 작성 시 `1064`(쉼표, 외래키 괄호) 반복 → 스키마 파일로 SQL을 생성하면 이 단계가 사라짐.
 - **React 호출·CORS 연습 완료(사용자 보고):** CORS 오류 확인 후 목록 표시, 글 작성, 새로고침 없는 목록 갱신과 입력칸 비우기까지 확인. 같은 연습을 처음부터 반복시키지 않는다.
 
 ---
@@ -87,7 +90,7 @@
 | 접속 주소 기본값 | `127.0.0.1` (`localhost` 쓰지 않음) |
 | 드라이버 | `mysql2` |
 | 문자셋 | DB 생성 시 `utf8mb4` / `utf8mb4_unicode_ci` |
-| 시간대 | 향후 테이블/API 설계 방향: TIMESTAMP와 UTC 처리. 드라이버 timezone 옵션과 MySQL 세션 시간대는 별개이므로 함께 검증한다. 현재 테이블 생성 기능은 없음 |
+| 시간대 | 향후 테이블/API 설계 방향: TIMESTAMP와 UTC 처리. 드라이버 timezone 옵션과 MySQL 세션 시간대는 별개이므로 함께 검증한다. 개발 중 테이블 생성기는 아직 시간 타입을 지원하지 않음 |
 | 외래키 `ON DELETE` | 기본값 `RESTRICT`. `CASCADE`는 스키마에서 사용자가 명시할 때만, SQL 미리보기에서 한국어 경고 |
 | 성공 메시지 | **실제 쿼리가 성공한 뒤에만** 출력. 에러를 삼키지 않는다 |
 | 메시지 언어 | 한국어 우선. 메시지 키 구조(`t("key")`, `ko.json`/`en.json`)는 향후 방향이며 현재는 코드에 한국어 문자열을 직접 작성한다 |
@@ -116,7 +119,7 @@
 | 단계 | 내용 | 다음 단계로 가는 관문 |
 |---|---|---|
 | 0. 연습 | CLI npm 배포 ✅, Express+mysql2 CRUD ✅, React 호출·CORS ✅ (사용자 확인) | 막힌 점 목록 완성 |
-| 1. 핵심 MVP | `init`·`dev`·`doctor`, JSON 스키마 → `CREATE TABLE`, CRUD API 자동 생성, 프론트 SDK + TS 자동완성, SQL 미리보기, 프론트 `.env`에 API 주소 자동 기록, 개발용 CORS 자동 허용 | 장기 검증 목표: 사용자 5명이 도움 없이 설치부터 첫 호출까지 성공. 현재 주변 테스트 참여자 없음 |
+| 1. 핵심 MVP | `init`·`dev`·`doctor`, schema.nanuk → `CREATE TABLE`, CRUD API 자동 생성, 프론트 SDK + TS 자동완성, SQL 미리보기, 프론트 `.env`에 API 주소 자동 기록, 개발용 CORS 자동 허용 | 장기 검증 목표: 사용자 5명이 도움 없이 설치부터 첫 호출까지 성공. 현재 주변 테스트 참여자 없음 |
 | 2. AI 모듈·확장 | `ai.chat()`(API 키는 서버에 숨김, 스트리밍, 대화 기록 자동 저장), ERD 자동 생성, eject, MCP 서버 | 실제 프로젝트에서 사용 |
 | 3. 배포 | 인증·권한 프리셋·사용량 제한, 마이그레이션, 운영 모드 + 배포 가이드 | - |
 
@@ -137,7 +140,7 @@
 
 - [x] 0.1.2 누락·공백 검사, 0.1.3 진단 개선, 0.1.4 로고 반영 기록.
 - [x] README의 고정 최신 버전 숫자 제거, 실제 공개 기능으로 설명 갱신.
-- [x] create-db는 0.2.0부터 제공되는 기능으로 README 정리. 사용자 배포 완료 보고, 레지스트리 반영 확인 대기.
+- [x] create-db는 0.2.0부터 제공되는 기능으로 README 정리. 공개 반영과 공개본 실행 확인 완료.
 
 ### C. doctor 진단 개선 — 완료
 
@@ -155,7 +158,7 @@
 
 - [x] 사용자 보고로 CORS 오류 경험·목록·작성·화면 갱신 확인. 과거 미완료 표시는 정정됨.
 
-### F. create-db — 구현 및 기본 검증 완료, 배포 준비 중
+### F. create-db — 0.2.0 배포 및 기본 검증 완료
 
 - [x] CLI 연결·도움말·files 배열·README 반영.
 - [x] DB 이름 빈 값/문자/길이 검사, HOST·PORT·USER 누락/공백 및 포트 정수/범위 검사.
@@ -166,10 +169,26 @@
 - [x] 생성된 연습 DB를 읽기 전용 조회: utf8mb4 / utf8mb4_unicode_ci 확인.
 - [x] npm pack 9개 파일 확인: create-database.js·이미지·LICENSE 포함, .env 제외. 임시 설치 후 도움말·오류·일반 취소·Ctrl+C(130) 확인. 새 DB 생성 없이 검사.
 - [x] 0.2.0 버전 및 README 정리, nanuk-cli-0.2.0.tgz 생성.
-- [ ] npm에 0.2.0 공개 후 레지스트리 설치 확인.
-- [ ] 변경 파일 커밋·push. 기록/문서 편집을 원격 반영 완료로 표현하지 않는다.
+- [x] npm에 0.2.0 공개 후 레지스트리 및 공개본 실행 확인.
+- [x] 0.2.0 변경 커밋·push(8aaf8b0). 이후 개발 변경의 원격 반영 여부는 별도로 확인한다.
 
-**다음 단계는 0.2.0 공개와 공개본 설치 검증, 커밋·push다.** 기능을 계속 늘리거나 이미 완료한 A~E를 반복하지 않는다.
+### G. preview/create-table — 0.3.0 배포, 사용자 공개 반영 확인
+
+- [x] 스키마 파싱·SQL 생성 함수 분리, 원본 줄 번호를 포함한 오류 안내.
+- [x] CLI 분기·도움말·files 배열 반영, import 부작용 제거.
+- [x] 임시 스키마 검사·설정 검사·질문 중 Ctrl+C·일부 모의 DB 오류 확인.
+- [x] 실제 board_db에서 생성·취소·중복 생성 및 컬럼 구조 확인.
+- [x] pack dry-run 11개 파일 확인. 실제 새 tgz 설치 검증과 구분한다.
+- [x] README에 새 명령·스키마 예시·제한·취소 동작 정리. 미배포 상태 구분.
+- [x] 연결 거부·시간 초과 모의 오류 검사 및 설치본 질문 중 취소 검사.
+- [x] DB 작업 중 취소 안내 수정 및 회귀 검사: SQL 시작 후 결과 미확정 안내, 연결 대기 중 취소 시 SQL 실행 방지. npm test 총 9개 통과. 수정 전 tgz는 다시 생성해야 한다.
+- [x] 현재 소스 실제 pack·임시 설치 검증. /private/tmp/nanuk-release-check의 0.2.0 tgz는 로컬 검증용이며 배포용이 아님.
+- [x] 0.3.0 버전 선택 및 설치본 미리보기·오류·취소 검증. lock/README도 0.3.0 배포 기준으로 정리.
+- [x] 사용자 npm 0.3.0 배포 완료 보고.
+- [x] 사용자 0.3.0 공개 반영 확인.
+- [ ] 반영 후 에이전트 공개본 설치 검증. GitHub 백업은 이번 사용자 요청으로 진행한다.
+
+**0.3.0 배포와 사용자 공개 반영 확인을 마쳤다.** 현재 로컬 버전은 0.3.0이다. 사용자가 배포 완료와 공개 반영을 확인했다. 직후 에이전트의 설치 시도는 ETARGET이었으며, 반영 후 공개본 설치는 별도 확인 사항이다. 실제 테스트 테이블 `board_db.nanuk_test_20261123_2c5adfa3`은 빈 상태로 남겨 두었으며 임의 삭제하지 않는다. 세부 검증과 학습 장애물은 DEVELOPMENT_LOG.md의 2026-11-23 기록을 참고한다.
 
 ---
 
@@ -184,4 +203,4 @@
 - 전체 기획서: https://claude.ai/artifact/PkfFjfG2ugmw6gmYCN9d7M
 - 연습 기록: `../board-crud/PRACTICE_LOG.md`, `../board-crud/CLAUDE.md`
 - 개발 기록: `DEVELOPMENT_LOG.md`
-- 1단계에서 직접 쓴 SQL (JSON → SQL 변환기의 정답지): `../board-crud/sql/schema.sql`
+- 1단계에서 직접 쓴 SQL (스키마 → SQL 변환기의 참고): `../board-crud/sql/schema.sql`

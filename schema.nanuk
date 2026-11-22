@@ -1,4 +1,4 @@
-table posts {
+table posts2 {
   id auto
   title varchar(100) NOT NULL
   content text
