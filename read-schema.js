@@ -18,18 +18,59 @@ export function parseSchema(schemaText) {
     })
     .filter((line) => line.text !== "");
 
-  const lines = sourceLines.map((line) => line.text);
-
-  // 파일이 비어 있지 않은지, 첫 줄이 table 이름 { 형식인지 검사한다.
-  // exitCode = 1은 실패를 표시하고, return은 parseSchema를 종료한다.
-  // main은 반환값이 없으면 SQL을 만들지 않고 종료한다.
-  const firstLine = lines[0];
-
-  if (!firstLine) {
+  if (sourceLines.length === 0) {
     console.error("파일이 비어있습니다.");
     process.exitCode = 1;
     return;
   }
+
+  const tableBlocks = [];
+
+  let currentBlock = [];
+
+  for (const line of sourceLines) {
+    currentBlock.push(line);
+    if (line.text === "}") {
+      tableBlocks.push(currentBlock);
+      currentBlock = [];
+    }
+  }
+
+  if (currentBlock.length > 0) {
+    console.error(
+      `${currentBlock[0].lineNumber}번째 줄에서 시작한 테이블에 닫는 괄호 }가 없습니다.`,
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  const tables = [];
+  const tableNames = new Set();
+
+  for (const block of tableBlocks) {
+    const table = parseTableBlock(block);
+    if (!table) return;
+    if (tableNames.has(table.tableName)) {
+      console.error(
+        `${block[0].lineNumber}번째 줄: 중복된 테이블 이름입니다: ${table.tableName}`,
+      );
+      process.exitCode = 1;
+      return;
+    }
+    tableNames.add(table.tableName);
+    tables.push(table);
+  }
+
+  return tables;
+}
+
+function parseTableBlock(sourceLines) {
+  const lines = sourceLines.map((line) => line.text);
+
+  // 파일이 비어 있지 않은지, 첫 줄이 table 이름 { 형식인지 검사한다.
+  // exitCode = 1은 실패를 표시하고, return은 parseTableBlock을 종료한다.
+  // main은 반환값이 없으면 SQL을 만들지 않고 종료한다.
+  const firstLine = lines[0];
 
   const headerLineNumber = sourceLines[0].lineNumber;
 
@@ -116,7 +157,7 @@ export function parseSchema(schemaText) {
   let hasAuto = false;
 
   // --- 컬럼별 문법·이름·자료형 검사 ---
-  // for...of 안에서 return하면 parseSchema 전체가 종료된다.
+  // 컬럼 오류에서 return하면 parseTableBlock이 종료되어 다음 컬럼은 검사하지 않는다.
   for (const line of columnLines) {
     const { text, lineNumber } = line;
     // 옵션과 필수 항목
@@ -270,15 +311,17 @@ export default async function main() {
   try {
     const schemaText = await readFile(process.cwd() + "/schema.nanuk", "utf8");
 
-    const schema = parseSchema(schemaText);
+    const tables = parseSchema(schemaText);
     // 해석에 실패하면 parseSchema가 undefined를 반환하므로 여기서 멈춘다.
-    if (!schema) {
+    if (!tables) {
       return;
     }
 
-    // 검증 결과로 SQL을 만든 뒤 미리보기만 출력한다. DB에서 실행하지 않는다.
-    const sql = buildCreateTableSql(schema.tableName, schema.columns);
-    console.log(sql);
+    for (const table of tables) {
+      // 검증 결과로 SQL을 만든 뒤 미리보기만 출력한다. DB에서 실행하지 않는다.
+      const sql = buildCreateTableSql(table.tableName, table.columns);
+      console.log(sql);
+    }
   } catch (err) {
     process.exitCode = 1;
     if (err.code === "ENOENT") {

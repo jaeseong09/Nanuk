@@ -54,18 +54,22 @@ export default async function main() {
 
   let connection;
   let queryStarted = false;
+  let createdCount = 0;
+
   try {
     const schemaText = await readFile(process.cwd() + "/schema.nanuk", "utf8");
 
-    const schema = parseSchema(schemaText);
+    const tables = parseSchema(schemaText);
     // 해석에 실패하면 parseSchema가 undefined를 반환하므로 여기서 멈춘다.
-    if (!schema) {
+    if (!tables) {
       return;
     }
 
     // 생성할 SQL을 먼저 보여주고, y로 동의한 경우에만 DB에서 실행한다.
-    const sql = buildCreateTableSql(schema.tableName, schema.columns);
-    console.log(sql);
+    const sqls = tables.map((table) => {
+      return buildCreateTableSql(table.tableName, table.columns);
+    });
+    console.log(sqls.join("\n\n"));
 
     const answer = await rl.question("이 테이블을 생성할까요? (y/N):", {
       signal: controller.signal,
@@ -87,20 +91,33 @@ export default async function main() {
       database: process.env.DB_NAME,
     });
 
-    // 연결을 기다리는 동안 취소했다면 SQL을 보내지 않는다.
-    controller.signal.throwIfAborted();
-    // SQL을 보낸 뒤에는 취소 요청만으로 생성 여부를 단정할 수 없다.
-    queryStarted = true;
-    await connection.query(sql);
-    console.log("테이블을 생성했습니다: ", schema.tableName);
+    for (const sql of sqls) {
+      // 연결을 기다리는 동안 취소했다면 SQL을 보내지 않는다.
+      controller.signal.throwIfAborted();
+      // SQL을 보낸 뒤에는 취소 요청만으로 생성 여부를 단정할 수 없다.
+      queryStarted = true;
+
+      await connection.query(sql);
+
+      queryStarted = false;
+
+      createdCount++;
+    }
+    console.log("테이블을 모두 생성했습니다.");
   } catch (err) {
+    if (createdCount > 0) {
+      console.error(
+        `오류 또는 취소 전에 테이블 ${createdCount}개가 생성됐습니다.`,
+      );
+    }
+
     if (cancelled) {
       if (queryStarted) {
         console.error(
           "SQL 실행 후 취소 요청이 있었지만 생성 여부를 확인할 수 없습니다. 다시 실행하기 전에 DB에서 테이블을 확인해 주세요.",
         );
       } else {
-        console.log("테이블 생성을 취소했습니다. 테이블을 생성하지 않았습니다.");
+        console.log("다음 SQL 실행 전에 취소했습니다.");
       }
       process.exitCode = 130;
       return;

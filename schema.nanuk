@@ -1,5 +1,11 @@
-table posts2 {
+table users {
   id auto
+  name varchar(20) NOT NULL
+}
+
+table posts {
+  id auto
+  user_id int NOT NULL
   title varchar(100) NOT NULL
   content text
 }

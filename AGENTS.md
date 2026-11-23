@@ -43,7 +43,7 @@
 
 ## 3. 현재 상태
 
-- npm 0.2.0 공개 및 공개 패키지 실행 확인 완료. 실행 명령은 `nanuk`. preview/create-table은 0.3.0에 포함되었고 사용자가 공개 반영을 확인했다.
+- npm 0.4.0 공개 및 레지스트리 설치 검증 완료. 실행 명령은 `nanuk`. 여러 테이블 미리보기·순차 생성·중복 검사·부분 성공 안내를 제공한다.
 - GitHub: https://github.com/jaeseong09/Nanuk (main). 프로젝트 자체 Git 저장소이며 상위 홈 폴더의 CampLog 저장소와 구분한다.
 - 라이선스: ISC, LICENSE의 저작권자 표기는 `2026 jaeseong09`.
 - 공개 기능: `init`의 설정 생성·기존 파일 보존·비밀번호 숨김·취소, `doctor`의 누락/공백·포트 검사와 오류 진단, 도움말.
@@ -54,7 +54,7 @@
 - ESM, 의존성 mysql2/dotenv/@inquirer/password. engines: `^22.13.0 || >=24.0.0`.
 - 개발 기능: schema.nanuk → parseSchema → buildCreateTableSql. preview는 SQL 출력, create-table은 y 확인 후 실제 생성. 단일 테이블, auto/int/text/varchar(n), NOT NULL 지원. 실제 생성·취소·중복 생성 확인 완료.
 - 아직 없는 기능: 외래키·마이그레이션, dev/API 서버 자동 생성, 프론트 SDK, 프론트 주소 자동 기록, CORS 자동 설정. JSON 대신 간단한 schema.nanuk 문법을 선택했다.
-- npm test는 CLI 기본 2개와 create-table 취소·생성 회귀 7개, 총 9개다. 회귀 검사는 입력·DB 대역을 사용한다. 기타 일회성 검사와 실제 DB 검증은 개발 기록에서 구분한다.
+- npm test는 CLI 기본 2개, create-table 생성·취소 13개, preview 9개로 총 24개다. 회귀 검사는 입력·DB 대역을 사용한다. 기타 일회성 검사와 실제 DB 검증은 개발 기록에서 구분한다.
 
 ---
 
@@ -204,3 +204,13 @@
 - 연습 기록: `../board-crud/PRACTICE_LOG.md`, `../board-crud/CLAUDE.md`
 - 개발 기록: `DEVELOPMENT_LOG.md`
 - 1단계에서 직접 쓴 SQL (스키마 → SQL 변환기의 참고): `../board-crud/sql/schema.sql`
+
+
+## 2026-11-23 현재 인계 사항 — 0.4.0
+
+- 0.4.0 공개 완료. 별도 캐시로 npm 레지스트리 latest=0.4.0 확인 및 공개 패키지 설치 성공.
+- 공개본 도움말, 여러 테이블 미리보기, 원본 줄 번호를 포함한 중복 오류, 질문에서 n 취소(0)·Ctrl+C(130) 확인. 공개된 실행 모듈 세 개가 로컬 검증 소스와 일치한다.
+- sourceLines → tableBlocks → parseTableBlock → tables 배열로 파싱한다. create-table은 모든 SQL 표시·한 번 동의·순차 실행하며, 성공 개수와 중간 실패·취소 상태를 안내한다.
+- 실제 board_db에 nanuk_verify_20261123_4012e52b_users/posts 두 테이블 생성과 구조·취소·중복 오류를 확인했다. 두 테이블은 빈 상태로 남아 있다.
+- 사용자가 0.4.0 GitHub 백업을 요청했다. 이번 백업에는 여러 테이블 코드·테스트·최신 문서·0.4.0 lock을 포함한다. 원격 반영 결과는 Git 이력으로 확인한다.
+- 공개 0.4.0 README에는 여러 테이블을 개발 중이라고 표시한 문구가 남아 있다. 로컬 수정은 다음 npm 배포에 반영해야 한다. 이 문서 갱신으로 공개 README가 바뀐 것은 아니다.
