@@ -5,7 +5,7 @@ table users {
 
 table posts {
   id auto
-  user_id int NOT NULL
+  user_id int NOT NULL ref users.id
   title varchar(100) NOT NULL
   content text
 }
