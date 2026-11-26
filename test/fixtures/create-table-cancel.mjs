@@ -44,6 +44,6 @@ mysql.createConnection = async () => {
     end: async () => { calls.end++; },
   };
 };
-const { default: main } = await import('../../create-table.js');
+const { default: main } = await import('../../src/commands/create-table.js');
 await main();
 console.log('TEST_CALLS:' + JSON.stringify(calls));

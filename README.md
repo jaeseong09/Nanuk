@@ -487,7 +487,7 @@ node cli.js --help
 
 개발 코드를 `nanuk` 명령에 연결하려면 `npm link`를 사용할 수 있습니다. 이 경우 npm 배포본이 아닌 로컬 소스가 실행됩니다.
 
-현재 개발 소스의 자동 테스트는 **총 41개**입니다.
+현재 개발 소스의 자동 테스트는 **Node 테스트 러너 집계 기준 74개**입니다. 서버 테스트 그룹 1개와 그 안의 세부 사례 32개를 포함한 수치입니다.
 
 | 테스트 파일 | 개수 | 확인 범위 |
 | --- | --- | --- |
@@ -495,14 +495,32 @@ node cli.js --help
 | `test/preview.test.js` | 9 | 단일·여러 테이블 SQL과 스키마 오류 |
 | `test/create-table.test.js` | 13 | 생성·취소·부분 성공·실패 이후 중단 |
 | `test/foreign-key.test.js` | 17 | 외래키 SQL, 여러 외래키, 이름 보존, 참조 문법·대상·자료형·순서 오류 |
+| `test/server-api.test.js` | 33 | 그룹 1개 + GET·POST HTTP 응답과 입력 검사 32개 |
 
-`npm test`는 실제 MySQL 서버 없이 실행할 수 있습니다. 생성·취소 검사는 입력·DB 대역을 사용하고, 외래키 검사는 임시 스키마로 실제 CLI를 실행합니다. 외래키 오류 14종은 `preview`와 `create-table` 양쪽에서 확인합니다.
+`npm test`는 실제 MySQL 서버 없이 실행할 수 있습니다. 생성·취소 검사는 입력·DB 대역을 사용하고, 외래키 검사는 임시 스키마로 실제 CLI를 실행합니다. 외래키 오류 14종은 `preview`와 `create-table` 양쪽에서 확인합니다. 서버 테스트는 현재 TypeScript 소스를 임시 빌드한 뒤 실제 Nest HTTP 서버와 DB 대역으로 검사하며, 사용자의 DB에는 접속하지 않습니다.
 
 실제 DB에서는 MySQL 9.3.0/InnoDB에서 테이블 생성, 정상 참조, 잘못된 참조의 INSERT·UPDATE 차단, 참조 중인 부모의 DELETE·기본키 UPDATE 차단을 별도로 검증했습니다. 이 DB 실험은 `npm test`에 포함되지 않습니다.
 
 자세한 결과와 학습 중 막힌 부분은 [개발 기록](https://github.com/jaeseong09/Nanuk/blob/main/DEVELOPMENT_LOG.md)에 남깁니다. 이 기록 파일은 npm 패키지에는 포함되지 않습니다.
 
 로컬 실행 확인에 사용한 Node.js 버전은 22.19.0과 25.9.0입니다. 이는 지원 범위에 속한 모든 버전을 테스트했다는 뜻은 아닙니다.
+
+### 다음 0.6.0 개발 소스의 API 서버
+
+**이 절은 GitHub의 로컬 개발 소스 기준입니다. 공개 npm 0.5.0에는 API 서버와 `nanuk dev` 명령이 포함되어 있지 않습니다.** 로컬에서도 아직 `nanuk dev`로 실행할 수 없으며, 직접 빌드·실행하는 단계입니다.
+
+Nanuk 소스 폴더에 `.env`와 `schema.nanuk`을 준비하고, 스키마와 일치하는 테이블을 MySQL에 생성한 뒤 실행합니다. 테이블 생성 방법은 위 `preview`·`create-table` 안내를 참고하세요.
+
+```bash
+npx tsc
+node dist/server/main.js
+```
+
+서버 주소는 `http://127.0.0.1:3000`입니다. `schema.nanuk`에 등록한 테이블에 대해 `GET /:tableName`으로 조회하고 `POST /:tableName`으로 생성할 수 있습니다. 예를 들어 `posts`가 등록되어 있다면 `/posts`를 사용합니다. Ctrl+C로 서버와 DB 연결 풀을 종료합니다. `dist/`는 Git에 포함하지 않으므로 소스를 받은 뒤 빌드해야 합니다.
+
+현재 POST는 필수 값·자료형·varchar 길이 등을 검사하지만 **INT 범위 초과, TEXT 용량 초과, 없는 부모를 참조하는 외래키 값은 아직 일반 500 오류로 응답**합니다. 2026-11-27 실제 MySQL 검사에서는 32건 중 28건이 통과했고, 이 세 종류의 경계·오류 사례 4건을 후속 작업으로 남겼습니다. 테스트에 사용한 임시 DB는 검사 후 삭제했습니다.
+
+PATCH·DELETE, 프론트용 CORS 설정, `nanuk dev` 명령 연결과 npm 배포용 빌드 설정은 아직 구현하지 않았습니다.
 
 ## 문의와 라이선스
 

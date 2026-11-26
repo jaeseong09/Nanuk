@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import checkDatabase from "./doctor.js";
-import init from "./init.js";
-import createDB from "./create-database.js";
-import previewSchema from "./read-schema.js";
-import createTable from "./create-table.js";
+import checkDatabase from "./src/commands/doctor.js";
+import init from "./src/commands/init.js";
+import createDB from "./src/commands/create-database.js";
+import previewSchema from "./src/commands/preview.js";
+import createTable from "./src/commands/create-table.js";
 
 const command = process.argv[2];
 

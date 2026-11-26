@@ -3,7 +3,8 @@ import mysql from "mysql2/promise";
 import { readFile } from "node:fs/promises";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { parseSchema, buildCreateTableSql } from "./read-schema.js";
+import { buildCreateTableSql } from "../schema/build-create-table-sql.js";
+import { parseSchema } from "../schema/parse-schema.js";
 
 export default async function main() {
   dotenv.config({ quiet: true });

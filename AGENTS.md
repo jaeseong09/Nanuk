@@ -1,14 +1,14 @@
 # Nanuk — 작업 안내 (AGENTS.md)
 
 이 파일은 Codex 등 코딩 에이전트가 Nanuk 프로젝트의 배경, 결정 사항, 현재 할 일을 한 번에 파악하도록 정리한 문서다.
-최종 정리: 2026-11-23. 현재 상태는 3번, 다음 작업은 7번을 우선 참고한다.
+최종 정리: 2026-11-27. 현재 상태는 3번, 다음 작업은 7번을 우선 참고한다.
 전체 기획서: https://claude.ai/artifact/PkfFjfG2ugmw6gmYCN9d7M
 
 ---
 
 ## 1. 프로젝트 한 줄 정의
 
-**Nanuk**은 MySQL 접속 설정과 연결 진단을 돕는 개발 환경 CLI다. 공개본은 확인 후 DB를 생성하며, 개발 소스에는 스키마 SQL 미리보기와 테이블 생성 기능도 있다. 장기 목표는 React 개발자가 DB 생성·서버 실행·프론트 주소 연결·CORS 설정을 쉽게 끝내도록 하는 것이며, 이 전체 흐름이 현재 구현된 것은 아니다.
+**Nanuk**은 MySQL 접속 설정과 연결 진단을 돕는 개발 환경 CLI다. 공개 0.5.0은 확인 후 DB 생성, 스키마 SQL 미리보기, 여러 테이블·외래키 생성을 지원한다. 로컬에서는 다음 0.6.0의 Nest 기반 API를 개발 중이다. 장기 목표는 React 개발자가 DB 생성·서버 실행·프론트 주소 연결·CORS 설정을 쉽게 끝내도록 하는 것이며, 이 전체 흐름이 현재 구현된 것은 아니다.
 이름은 이누이트어로 "북극곰"이라는 뜻이다.
 
 ### 범위 결정 (확정)
@@ -38,23 +38,26 @@
 - 사용자가 직접 겪은 것과 에이전트가 재현한 실험은 기록에서 구분한다.
 - 코드 확인 요청에는 실제 저장 파일을 읽는다. 수정할 함수와 위치를 명확히 짚는다.
 - 정규식은 의미를 설명한 뒤 완성 패턴을 제공한다(사용자 요청).
+- 새로운 제품 로직과 Nest Service 등록·연결은 사용자가 작성한다. 이미 구현한 로직의 이동·재사용은 에이전트가 설명 후 처리한다.
+- 테스트·주석·README·개발 기록과 요청한 GitHub 백업은 에이전트가 담당한다. 공개 npm 기능과 로컬 개발 기능을 구분하고 문서가 한 버전씩 뒤처지지 않게 갱신한다.
 
 ---
 
 ## 3. 현재 상태
 
-- npm 0.4.0 공개 및 레지스트리 설치 검증 완료. 실행 명령은 `nanuk`. 여러 테이블 미리보기·순차 생성·중복 검사·부분 성공 안내를 제공한다.
-- GitHub: https://github.com/jaeseong09/Nanuk (main). 프로젝트 자체 Git 저장소이며 상위 홈 폴더의 CampLog 저장소와 구분한다.
-- 라이선스: ISC, LICENSE의 저작권자 표기는 `2026 jaeseong09`.
-- 공개 기능: `init`의 설정 생성·기존 파일 보존·비밀번호 숨김·취소, `doctor`의 누락/공백·포트 검사와 오류 진단, 도움말.
-- **0.2.0에 추가:** `nanuk create-db`. 이름·접속 정보 검증 → SQL 미리보기 → y 확인 → DB 생성. 기본 문자셋/정렬은 utf8mb4/utf8mb4_unicode_ci. 기존 DB를 삭제하거나 덮어쓰지 않는다.
-- `create-database.js`의 자동 main() 호출은 제거했다. CLI에서 명령을 선택할 때 await 호출한다. 직접 파일 실행을 안내하지 않는다.
-- create-db의 files 배열 및 CLI 도움말 반영 완료. package.json과 package-lock.json은 0.2.0으로 맞췄고 README는 0.2.0 배포용으로 정리했다. 이후 레지스트리 반영과 공개본 실행도 확인했다.
-- 파일: cli.js, init.js, doctor.js, create-database.js, read-schema.js, create-table.js, schema.nanuk, test/cli.test.js, README.md, DEVELOPMENT_LOG.md, LICENSE, assets/.
-- ESM, 의존성 mysql2/dotenv/@inquirer/password. engines: `^22.13.0 || >=24.0.0`.
-- 개발 기능: schema.nanuk → parseSchema → buildCreateTableSql. preview는 SQL 출력, create-table은 y 확인 후 실제 생성. 단일 테이블, auto/int/text/varchar(n), NOT NULL 지원. 실제 생성·취소·중복 생성 확인 완료.
-- 아직 없는 기능: 외래키·마이그레이션, dev/API 서버 자동 생성, 프론트 SDK, 프론트 주소 자동 기록, CORS 자동 설정. JSON 대신 간단한 schema.nanuk 문법을 선택했다.
-- npm test는 CLI 기본 2개, create-table 생성·취소 13개, preview 9개로 총 24개다. 회귀 검사는 입력·DB 대역을 사용한다. 기타 일회성 검사와 실제 DB 검증은 개발 기록에서 구분한다.
+- 공개 npm 버전은 사용자 배포 확인 기준 **0.5.0**. 로컬 package.json도 0.5.0이며 **0.6.0은 개발 중**이다. GitHub 백업과 npm 배포를 구분한다.
+- GitHub: https://github.com/jaeseong09/Nanuk (main). 실제 CLI 저장소는 `~/Desktop/연습/nanuk`이다. `~/Documents/ChatGPT/Nanuk`의 웹사이트 작업과 구분한다.
+- 공개 명령: `init`, `doctor`, `create-db`, `preview`, `create-table`, 도움말. 여러 테이블과 `ref users.id` 외래키를 지원하며 `ON DELETE RESTRICT`를 생성한다.
+- ESM, ISC 라이선스(2026 jaeseong09), Node engines는 `^22.13.0 || >=24.0.0`.
+- 파일 구조: `cli.js` → `src/commands/*.js`, 파서·SQL 생성은 `src/schema/*.js`, 새 Nest 서버는 `src/server/*.ts`. 예전 루트 명령 파일은 이동했으므로 되살리지 않는다.
+- Nest 서버: SchemaService가 실행 폴더의 schema.nanuk을 읽고 보관한다. Controller → AppService → DatabaseService → MySQL 순서로 GET/POST `/:tableName`을 처리한다. 스키마에 없는 테이블은 404다.
+- POST는 본문 객체, 허용 컬럼, auto 직접 입력, 필수 값, 자료형, varchar 문자 수를 검사한다. 식별자는 escapeId(..., true), 값은 ?와 별도 배열을 사용한다. 정상 생성은 201이며 현재 mysql2 실행 결과를 그대로 반환한다.
+- 접속 설정 검증, SELECT 1 초기화 검사, 초기화 실패 후 종료 코드 1, enableShutdownHooks와 종료 시 풀 정리를 구현했다.
+- `npm test` 집계 74개 통과(기존 41 + 서버 그룹 1/세부 사례 32). 서버 테스트는 실제 Nest HTTP와 DB 대역을 사용하며 현재 소스를 임시 빌드한다. 실제 MySQL 별도 검사 32건 중 28건 통과, 아래 4건은 500 응답 문제로 남아 있다.
+- **다음 수정 대상:** INT 상·하한 초과 2건, TEXT 바이트 제한 1건, 없는 외래키 부모 1건. 모두 실제 INSERT는 거부됐지만 사용자 입력 오류 안내로 변환하지 못했다. 상세 근거는 DEVELOPMENT_LOG.md의 2026-11-27 테스트 기록에 있다.
+- 아직 없는 기능: PATCH/DELETE, `nanuk dev` CLI 연결, 마이그레이션, 프론트 SDK·CORS 자동 설정. 기존 CLI로 테이블을 생성한 뒤 개발 서버를 따로 실행하는 단계다.
+- 개발 서버 실행: 소스 폴더에서 `npx tsc` → `node dist/server/main.js`. MySQL과 현재 폴더의 접속 설정·스키마·실제 테이블이 필요하다. dist는 Git에서 제외하고 다시 빌드한다.
+- npm 배포용 빌드 스크립트·dist 포함·새 의존성의 Node 지원 범위 검증은 남아 있다. 현재 상태로 0.6.0 출시 준비가 끝났다고 안내하지 않는다.
 
 ---
 
@@ -91,10 +94,10 @@
 | 드라이버 | `mysql2` |
 | 문자셋 | DB 생성 시 `utf8mb4` / `utf8mb4_unicode_ci` |
 | 시간대 | 향후 테이블/API 설계 방향: TIMESTAMP와 UTC 처리. 드라이버 timezone 옵션과 MySQL 세션 시간대는 별개이므로 함께 검증한다. 개발 중 테이블 생성기는 아직 시간 타입을 지원하지 않음 |
-| 외래키 `ON DELETE` | 기본값 `RESTRICT`. `CASCADE`는 스키마에서 사용자가 명시할 때만, SQL 미리보기에서 한국어 경고 |
+| 외래키 `ON DELETE` | 현재는 `RESTRICT`만 지원. 향후 `CASCADE` 지원 시 사용자 명시와 SQL 미리보기 경고 필요 |
 | 성공 메시지 | **실제 쿼리가 성공한 뒤에만** 출력. 에러를 삼키지 않는다 |
 | 메시지 언어 | 한국어 우선. 메시지 키 구조(`t("key")`, `ko.json`/`en.json`)는 향후 방향이며 현재는 코드에 한국어 문자열을 직접 작성한다 |
-| 생성할 API 기본 동작 | `express.json()` 기본 등록, 값은 항상 `?` 자리표시자, UPDATE·DELETE 0행이면 404 |
+| API 서버 | Nest + mysql2. JSON 본문은 Nest 기본 파서 사용, 값은 `?` 자리표시자. 향후 UPDATE·DELETE 0행이면 404 처리 |
 | AI 친화 | `AGENTS.md`/`llms.txt` 자동 생성, `doctor --json` 출력 (1단계 후보) |
 | MySQL 설치 | 자동화하지 않음. 없으면 감지해서 한국어 설치 안내 |
 
@@ -129,6 +132,17 @@
 ---
 
 ## 7. 작업 현황과 다음 단계
+
+### 먼저 재개할 작업 — 2026-11-28 예정
+
+사용자가 오늘 개발을 중단하고 기록·GitHub 백업을 요청했다. **새 기능을 대신 완성하지 말고 다음 한 단계부터 힌트로 진행한다.**
+
+1. `src/server/app.service.ts`의 `createRow()` → 입력 컬럼 반복문 → `schemaColumn.type === "int"` 분기에서, 기존 정수 검사 바로 다음에 signed INT 범위(-2147483648~2147483647)를 검사한다. 사용자가 작성하고 에이전트가 리뷰·테스트한다.
+2. 그다음 TEXT는 UTF-8 바이트 수 65535 한도를 검사한다. varchar 문자 수 검사와 구분한다.
+3. 없는 부모를 참조할 때의 MySQL 오류를 400 또는 409와 한국어 안내로 바꾸고 앞서 실패한 실제 DB 사례를 재검증한다.
+4. 생성 응답 형태 정리 → PATCH/DELETE → `nanuk dev` 연결 → React/CORS와 배포 준비 순으로 진행한다. 한꺼번에 구현하지 않는다.
+
+아래 A~G와 문서 끝의 0.4.0 메모는 과거 진행 기록이다. 최신 상태는 3번과 이 재개 순서를 우선한다.
 
 ### A. README 재구성 — 완료
 
@@ -188,7 +202,7 @@
 - [x] 사용자 0.3.0 공개 반영 확인.
 - [ ] 반영 후 에이전트 공개본 설치 검증. GitHub 백업은 이번 사용자 요청으로 진행한다.
 
-**0.3.0 배포와 사용자 공개 반영 확인을 마쳤다.** 현재 로컬 버전은 0.3.0이다. 사용자가 배포 완료와 공개 반영을 확인했다. 직후 에이전트의 설치 시도는 ETARGET이었으며, 반영 후 공개본 설치는 별도 확인 사항이다. 실제 테스트 테이블 `board_db.nanuk_test_20261123_2c5adfa3`은 빈 상태로 남겨 두었으며 임의 삭제하지 않는다. 세부 검증과 학습 장애물은 DEVELOPMENT_LOG.md의 2026-11-23 기록을 참고한다.
+**당시 0.3.0 배포와 사용자 공개 반영 확인을 마쳤다.** 당시 로컬 버전은 0.3.0이었다. 사용자가 배포 완료와 공개 반영을 확인했다. 직후 에이전트의 설치 시도는 ETARGET이었으며, 반영 후 공개본 설치는 별도 확인 사항이다. 실제 테스트 테이블 `board_db.nanuk_test_20261123_2c5adfa3`은 빈 상태로 남겨 두었으며 임의 삭제하지 않는다. 세부 검증과 학습 장애물은 DEVELOPMENT_LOG.md의 2026-11-23 기록을 참고한다.
 
 ---
 
@@ -206,7 +220,7 @@
 - 1단계에서 직접 쓴 SQL (스키마 → SQL 변환기의 참고): `../board-crud/sql/schema.sql`
 
 
-## 2026-11-23 현재 인계 사항 — 0.4.0
+## 과거 인계 기록 — 2026-11-23 / 0.4.0
 
 - 0.4.0 공개 완료. 별도 캐시로 npm 레지스트리 latest=0.4.0 확인 및 공개 패키지 설치 성공.
 - 공개본 도움말, 여러 테이블 미리보기, 원본 줄 번호를 포함한 중복 오류, 질문에서 n 취소(0)·Ctrl+C(130) 확인. 공개된 실행 모듈 세 개가 로컬 검증 소스와 일치한다.

@@ -1,12 +1,16 @@
 # Nanuk 개발 기록
 
-## 현재 상태 — 2026-11-25 (한국 시간)
+## 현재 상태 — 2026-11-27 (한국 시간)
 
-- 사용자가 0.5.0 배포 완료를 보고했다. 로컬 package.json도 0.5.0이며, 외래키 문법·검사·SQL 생성을 포함한다. 배포 후 에이전트의 레지스트리 설치 검증과 GitHub 백업은 별도 확인 사항이다.
-- `ref users.id`: 같은 파일의 앞에 선언된 테이블에 있는 `auto`를 `int` 컬럼에서 참조하며, 삭제 규칙은 `RESTRICT`다.
-- 옵션·컬럼·테이블 검사 함수를 분리했고, 자동 테스트는 기존 24개와 외래키 17개로 총 41개다.
-- 실제 MySQL 9.3.0의 외래키 검증은 2026-11-24에 완료했다. 임시 테이블을 정리하고, 잠시 시작한 mysql 컨테이너는 원래 중지 상태로 복구했다.
-- 아래 이전 날짜의 내용은 당시 기록이다. 최근 구현·검증·학습 장애물은 문서 끝의 2026-11-24~25 기록을 참고한다.
+- 공개 버전은 사용자 보고 기준 0.5.0이며, 로컬 버전도 0.5.0이다. 다음 0.6.0의 Nest 기반 nanuk dev/API는 개발 중이며 아직 CLI 명령으로 연결하지 않았다.
+- 기존 CLI 명령은 src/commands, 스키마 파서·SQL 생성기는 src/schema, 새 Nest 서버는 src/server에 있다. tsc는 src의 구조를 유지하여 dist로 변환하며 기존 JS 파서도 함께 포함한다.
+- SchemaService가 실행 폴더의 schema.nanuk을 읽고 기존 parseSchema로 검사한 결과를 보관한다. AppService가 허용된 테이블인지 확인하고, DatabaseService가 escapeId로 이름을 감싸서 실제 DB를 조회·저장한다.
+- GET /:tableName 및 POST /:tableName 구현. 사용자 실제 조회·생성 확인 후, 에이전트가 11월 27일 임시 DB에서 추가 검증했다. PATCH·DELETE와 nanuk dev 명령 연결은 미구현이다.
+- 정상 종료 및 DB 연결 실패 후 풀 정리는 사용자 실행 로그로 확인했다. 접속 설정 누락·공백과 포트 범위 검사도 추가했다.
+- 자동 테스트는 npm test 집계 74개 통과(기존 41개 + 서버 그룹 1개/세부 사례 32개). 실제 MySQL 검사는 32건 중 28건 통과, 4건은 일반 500 응답 문제를 확인했다. 두 검증 결과를 합쳐 모두 통과했다고 표현하지 않는다.
+- 다음 수정 대상: INT 상·하한 초과 검사, TEXT 바이트 제한, 없는 외래키 대상에 대한 오류 안내. 실제 거부된 요청은 모두 저장되지 않았다. 자세한 결과는 문서 마지막 기록 참고.
+- 이번 테스트는 고유한 임시 DB를 생성해 실행하고 삭제까지 확인했다. 기존 DB 데이터는 변경하지 않았고, 이미 실행 중이던 Docker MySQL은 계속 실행 상태로 유지했다.
+- 사용자가 개발을 내일로 미루고 현재 변경의 GitHub 백업을 요청했다. 기록·README·AGENTS를 최신 상태로 맞췄으며, 백업 결과는 Git 커밋과 원격 main 이력으로 확인한다. 이번 작업에는 npm 배포나 버전 변경이 포함되지 않는다.
 
 ## 초기 구현 상태 — 2026-11-17 (한국 시간)
 
@@ -936,3 +940,136 @@ npm publish ./nanuk-cli-0.1.1.tgz --access public
 - 커밋 전 자동 테스트 41개 통과를 확인했다. .env와 node_modules는 Git에서 제외되며, 추적 중인 .env·tgz·node_modules 파일은 없다.
 - package.json은 0.5.0이지만 package-lock.json의 최상위와 루트 패키지 버전은 0.4.0으로 남아 있어 두 값을 0.5.0으로 맞췄다. 의존성 정보는 바꾸지 않았다.
 - README는 외래키 지원 시점을 0.5.0으로 표시하고 공개 설치·실행 예시로 갱신했다. npm 재배포는 이번 작업에 포함하지 않는다. 커밋·push 결과는 Git 이력으로 확인한다.
+
+
+### 2026-11-25 — src 폴더 분리 후 테스트·패키지 검증
+
+- 사용자가 실행 명령을 src/commands로 이동하고, 스키마 파서와 SQL 생성기를 src/schema로 분리했다. 루트 cli.js는 유지하며 preview.js 및 create-table.js에서 새 상대 경로를 사용한다.
+- 에이전트가 test/fixtures/create-table-cancel.mjs의 import를 ../../src/commands/create-table.js로 수정하고 package.json의 files를 cli.js, src, assets로 변경했다. 나머지 테스트는 루트 cli.js를 실행하므로 경로 변경이 필요 없었다.
+- 기존 자동 테스트 41개 모두 통과. git diff --check 통과.
+- /private/tmp/nanuk-layout-QFGgwe에 실제 npm pack 후 별도 설치를 수행했다. 패키지 13개 파일에 실행 모듈 8개가 모두 포함됐고, .env·test·node_modules·tgz 중첩은 제외됐다. 설치된 실행 모듈은 로컬 소스와 일치했다.
+- 설치본 nanuk 실행 파일로 도움말, 알 수 없는 명령(1), doctor 필수 설정 누락(1), 외래키 미리보기(0), 없는 참조 테이블(1), init의 기존 .env 보존(0), create-db/create-table의 n 취소(0)를 확인했다.
+- 실제 DB 접속·생성은 이번 검증에서 하지 않았다. 버전은 0.5.0으로 유지했으며 생성한 tgz는 구조 변경 검증용이다. npm 재배포·Git commit/push는 수행하지 않았다. 소요 시간은 미측정.
+
+
+## 2026-11-25 — Nest 서버 기초·MySQL 연결 학습 및 중단 지점
+
+### 진행한 내용
+
+- 사용자가 Nest를 학습하면서 0.6.0의 `nanuk dev`를 만들기로 선택했다. 기존 ESM JavaScript CLI와 스키마 코드는 유지하고, 새 Nest 서버만 TypeScript로 작성한다.
+- 설치: @nestjs/common·core·platform-express 12.6.0, reflect-metadata 0.2.2, rxjs 7.8.2. 개발 도구는 TypeScript 7.0.2와 @types/node 26.6.6이다. 의존성 버전은 package.json/lock을 기준으로 관리한다.
+- tsconfig.json: ES2022, NodeNext, strict, 데코레이터·메타데이터, Node 타입, skipLibCheck, noEmitOnError. src/server의 TypeScript를 dist/server로 변환한다.
+- AppModule은 AppController를 controllers에, AppService와 DatabaseService를 providers에 등록한다.
+- AppController는 생성자로 AppService를 주입받아 GET / 요청에서 getHello()의 반환값을 전달한다. AppService는 "Nanuk 서버 실행 중"을 반환한다.
+- main.ts는 reflect-metadata를 로딩하고, bootstrap에서 dotenv.config({ quiet: true }) → NestFactory.create(AppModule) → app.listen(3000, "127.0.0.1") 순서로 실행한다.
+- DatabaseService는 생성자에서 mysql2/promise의 createPool로 연결 풀을 만들어 private readonly pool에 저장한다. DB_PORT는 Number로 변환한다.
+- async onModuleInit에서 SELECT 1을 await한 다음 "DB 연결 성공"을 출력한다. async onModuleDestroy에서 pool.end()를 await하도록 작성했다.
+- main.ts에 enableShutdownHooks()는 아직 없다. 종료 메서드를 작성한 것과 실제 Ctrl+C 종료 동작을 검증한 것은 구분한다.
+
+### 확인한 결과와 범위
+
+- 사용자 실행 확인: npx tsc로 빌드, node dist/server/main.js로 시작, 브라우저 GET / 응답 확인. Service 연결 후에도 같은 응답 확인.
+- 사용자 실행 확인: 처음 SELECT 1 시 ECONNREFUSED 127.0.0.1:3306 발생. Docker를 켜고 재실행한 뒤 "DB 연결 성공" 확인.
+- 에이전트 확인: 학습 단계마다 실제 저장 파일을 읽고 tsc --noEmit으로 타입 검사. Pool import 수정 이후 연결 검사 메서드까지 타입 검사 통과를 확인했다. 이번 기록 시점에는 종료 메서드와 main.ts를 읽었으며, 서버/DB 재실행이나 전체 회귀 테스트는 하지 않았다.
+- npm 12.0.1이 Node 25.9.0을 지원하지 않는다는 경고도 사용자 실행 로그에 있다. 이번 ECONNREFUSED와는 별개이며, 지원되는 Node/npm 조합 정리는 추후 작업이다.
+
+### 학습 중 막힌 부분 — 사용자 코드와 대화에서 확인
+
+| 단계 | 에러·상황 | 걸린 시간 | 해결 방법 |
+| --- | --- | --- | --- |
+| Controller 응답 | console.log와 return의 용도 혼동 | 미측정 | 브라우저에 줄 값은 return, 터미널 진단 로그는 console.log로 구분 |
+| Service 연결 | constructor 문법과 private readonly 매개변수가 어려움 | 미측정 | Nest가 AppService를 생성자에 전달하고 this.appService에 저장한다는 흐름으로 설명 |
+| 메서드 호출 | this.appService.getHello로 가리키기만 하고 호출·반환 누락 | 미측정 | 괄호로 호출하고 결과를 return하도록 수정 |
+| 데코레이터 | Injectable()만 호출하고 @ 누락 | 미측정 | 클래스 위에 @Injectable()을 붙여 메타데이터 적용 |
+| 풀 초기화 | pool 속성 선언 이후 값을 넣는 위치가 어려움 | 미측정 | 생성자에서 createPool 결과를 this.pool에 대입 |
+| Pool 타입 | createPool은 mysql2/promise, Pool 타입은 mysql2에서 가져와 TS2322 발생 | 미측정 | 함수와 타입 모두 mysql2/promise 경로로 통일 |
+| DB 연결 | ECONNREFUSED 127.0.0.1:3306 | 미측정 | Docker 실행 후 재시도해 DB 연결 성공을 사용자 확인 |
+| 생명주기 | onModuleInit/onModuleDestroy가 언제 자동 실행되는지 혼동 | 미측정 | 초기화 훅과 종료 훅을 구분하고 Ctrl+C에는 enableShutdownHooks 설정이 필요함을 설명 |
+
+### 다음 재개 순서
+
+1. main.ts에서 앱 생성 뒤, listen 전에 enableShutdownHooks()를 추가한다. 사용자가 직접 코드 작성하고 에이전트는 힌트·리뷰를 제공한다.
+2. 다시 빌드·실행하고 Ctrl+C 시 종료 훅이 호출되며 풀이 닫히는지 확인한다. 기존 구현을 완료로 가정하지 않는다.
+3. DB 접속 설정 검증, 초기화 실패 안내와 종료 처리를 정리한다. 예전 CLI 진단 코드를 참고하되 실패를 삼켜 서버가 정상 시작한 것처럼 보이지 않게 한다.
+4. 게시글 조회 하나부터 Controller → Service → DatabaseService → MySQL 흐름을 연습하고, 이후 스키마 기반 API와 nanuk dev 연결로 확장한다. 현재 DB 조회 API/CRUD 자동 생성은 미구현이다.
+5. 배포 준비 때 dist의 Git 제외 방침, TypeScript 빌드 스크립트, npm 배포 파일 목록과 Node 지원 범위를 확인한다. 현재 files에는 src만 포함되고 dist는 포함되지 않아 Nest 실행 배포 준비가 끝난 상태가 아니다.
+
+사용자가 다른 일정으로 개발을 중단하고 기록을 요청했다. 이번 작업은 기록만 갱신하며, 제품 코드·README 공개 기능·버전은 변경하지 않는다. 소요 시간은 미측정이다.
+
+
+## 2026-11-27 — 스키마 기반 GET·POST 테스트
+
+### 학습·구현 진행 요약
+
+- 사용자가 Nest 종료 훅 활성화, 초기화 실패 처리, 조회·생성 메서드, 스키마 보관과 검색, 동적 경로, POST 입력 검사를 직접 구현했다. 에이전트는 파일 리뷰와 힌트를 제공했다.
+- 작업 방식 정정: Service 등록·연결 등 새로운 Nest 코드는 사용자가 작성한다. 이미 완성한 파일 읽기·설정 검증·식별자 처리 같은 로직 재사용은 에이전트가 설명 후 처리한다.
+- 고정 posts 조회 연습을 끝내고 사용자 schema.nanuk 기준의 GET /:tableName, POST /:tableName으로 전환했다. AppService가 테이블 허용 여부를 검사하고 이름을 DatabaseService로 전달한다.
+- 입력 검사는 본문 객체 여부, 등록된 컬럼, auto 직접 입력 금지, NOT NULL 누락/null, int 정수 타입, text/varchar 문자열 타입, varchar 문자 수를 다룬다. 문자열 길이는 펼침 배열로 세어 이모지 코드 포인트도 처리한다.
+- 생성 SQL은 이름에 escapeId(..., true), 값에 ?와 별도 values 배열을 사용한다. 현재 작성 응답은 mysql2 실행 결과를 그대로 전달한다. 응답 형태 정리는 후속 작업이다.
+
+### 자동 회귀 테스트 — 에이전트 실행
+
+- test/server-api.test.js 추가. 실행할 때 현재 소스를 임시 경로에 빌드하므로 오래된 dist에 의존하지 않는다.
+- 실제 Nest Controller·AppService·SchemaService·스키마 파서·HTTP 서버를 사용한다. DatabaseService만 저장·조회 호출을 기록하는 대역으로 교체하므로 MySQL 없이 실행할 수 있다. 테스트 서버는 임시 포트에 바인딩하며 마지막에 종료하고 임시 폴더를 정리한다.
+- GET: users/posts 각각 전달, 미등록 테이블 404와 DB 조회 없음.
+- POST 거부: 미등록 테이블/컬럼, auto 직접 입력/null, 필수 누락/null, 배열·null·스칼라·잘못된 JSON·본문 없음, int의 문자열/소수/boolean, 문자열 컬럼의 숫자/객체/배열, varchar 문자·이모지 길이 초과, __proto__ 이름.
+- 거부 사례마다 DB 저장 호출 횟수가 늘지 않음을 검사한다.
+- POST 허용: 선택 컬럼 생략/null, 숫자 0/음수, varchar 문자·이모지 길이 경계, NOT NULL 빈 문자열, 다른 테이블 작성. 정상 요청은 201이며 검사가 끝난 뒤 저장을 한 번만 호출한다.
+- 결과: npm test 총 74개 통과, 실패 0. Node 집계에는 기존 41개, 서버 테스트 그룹 1개와 세부 사례 32개가 포함된다. TypeScript 빌드와 git diff --check도 통과했다.
+
+### 실제 MySQL 검증 — 에이전트 실행
+
+- 사용자가 실행 중인 서버나 기존 데이터를 사용하지 않고, 고유한 임시 DB에서 실제 AppModule과 연결 풀을 띄웠다. 서버는 임시 포트를 사용했다.
+- MySQL 9.3.0, STRICT_TRANS_TABLES를 포함한 SQL 모드, utf8mb4/utf8mb4_unicode_ci DB에서 검증했다. 실행 전부터 mysql 컨테이너는 켜져 있었으며 실행 상태를 변경하지 않았다.
+- 현재 스키마의 users/posts와 경계값 확인용 임시 테이블을 기존 파서·SQL 생성기로 만들었다. 스키마에 없는 DB 테이블 hidden도 만들어 허용 목록 검사를 확인했다.
+- 성공 확인: 빈 목록, 201과 실제 INSERT 일치, 정상 외래키, GET 조회, 한글/이모지/따옴표/SQL처럼 보이는 문자열 보존, 선택 컬럼 생략/null, 0, signed INT 양끝, TEXT 65535바이트, 빈 객체 기본값 INSERT, 점이 있는 테이블명·백틱이 있는 컬럼명.
+- 입력 오류의 400/미등록 테이블의 404, 잘못된 JSON을 확인했고 거부 요청 전후 모든 임시 테이블의 행 수가 동일한지 비교했다.
+- 총 32건 중 28건 통과. 아래 4건은 기대하는 입력/관계 오류 안내 대신 500 Internal server error가 나왔다. 실패 요청은 DB에 저장되지 않았다.
+
+| 검사 | 실제 응답 | 다음에 필요한 처리 |
+| --- | --- | --- |
+| 없는 부모를 참조하는 외래키 값 | 500 | MySQL 외래키 오류를 잡아 400 또는 409와 한국어 안내로 변환 |
+| int에 2147483648 입력 | 500 | INSERT 전 signed INT 상한 검사 |
+| int에 -2147483649 입력 | 500 | INSERT 전 signed INT 하한 검사 |
+| text에 ASCII 65536바이트 입력 | 500 | TEXT 용량을 문자 수가 아닌 바이트 기준으로 검사 |
+
+- 이번 작업에서는 사용자 학습 코드를 수정하지 않았다. 미구현 오류 안내를 기존 성공 테스트에 숨기지 않고 후속 수정 대상으로 기록했다.
+- 실제 DB 검증 스크립트와 상세 결과는 /private/tmp/nanuk-api-live-check.mjs 및 /private/tmp/nanuk-api-live-report.json에 있다. 이는 npm test에 포함된 자동 테스트와 별도의 일회성 실험이다.
+- 생성한 임시 DB `nanuk_api_check_20261127_fb00ada6`는 검사 후 삭제했고 information_schema에서 남아 있지 않음을 확인했다. 검사 서버·연결 풀·임시 빌드 폴더도 정리했다. 기존 DB의 사용자 데이터는 변경하지 않았다.
+
+### 다음 단계
+
+1. 위 3종류(INT 범위는 상·하한 2건)의 미처리 오류를 보완하고 해당 실패 사례를 재검증한다.
+2. 생성 응답에 노출할 정보를 정한다. 현재는 insertId/affectedRows 외 mysql2 내부 결과도 그대로 반환한다.
+3. 이후 auto 기본키가 있는 테이블의 PATCH/DELETE를 구현한다. 그 뒤 nanuk dev 연결, React/CORS 검증, README와 패키지 설치 검증으로 진행한다.
+
+모든 소요 시간은 미측정이다. 이번 검증은 현재 로컬 개발 소스 대상이며 공개 npm 0.5.0이나 모든 MySQL 설정에서 같은 결과를 보장하는 검증이 아니다.
+
+
+## 2026-11-27 — 개발 중단과 GitHub 백업 준비
+
+사용자가 오늘 개발을 멈추고 내일 이어갈 수 있도록 기록과 GitHub 백업을 요청했다. 새 입력 검사나 API 기능을 대신 구현하지 않고 현재 진행 상태를 보존한다.
+
+- 백업 대상: CLI·스키마 파일의 src 이동, Nest 서버와 TypeScript 설정, 패키지 의존성·lock, 서버 API 테스트, 최신 문서.
+- `.gitignore`에 `dist/`를 추가했다. `.env`, node_modules, tgz와 빌드 결과물은 백업에서 제외한다. 소스와 lock으로 설치·빌드한다.
+- README는 공개 0.5.0 기능 설명을 유지하고, 미배포 0.6.0 개발 서버 실행법·74개 자동 테스트·알려진 500 응답 4건을 별도로 표시했다. AGENTS의 오래된 현재 상태와 다음 작업도 갱신했다.
+- 자동 테스트 통과와 실제 DB 오류 4건을 구분한다. 오늘 확인된 INT 상·하한, TEXT 용량, 없는 외래키 부모에 대한 오류 응답은 아직 고치지 않았다.
+- package.json/lock 버전은 0.5.0으로 유지한다. 이번 GitHub 백업은 npm 배포가 아니다.
+
+### 내일 시작할 위치 — 2026-11-28 예정
+
+1. `src/server/app.service.ts`의 `createRow()`를 연다.
+2. `for (const columnName of inputColumnNames)` 안의 `schemaColumn.type === "int"` 분기를 찾는다.
+3. 기존 `typeof value`·`Number.isInteger(value)` 검사 바로 다음에서 **-2147483648~2147483647 범위**를 검사하는 것부터 사용자에게 힌트로 안내한다. 추천 오류 문구: `컬럼명 컬럼은 -2147483648부터 2147483647까지의 정수를 입력해야 합니다.`
+4. 사용자가 작성하면 에이전트가 리뷰하고 상·하한 및 경계값 테스트를 담당한다. 그다음 TEXT 바이트 제한 → 외래키 오류 안내 순으로 한 단계씩 진행한다.
+
+| 단계 | 에러·상황 | 걸린 시간 | 해결 방법 |
+| --- | --- | --- | --- |
+| POST 실 DB 검증 | 범위 밖 INT·용량 초과 TEXT·없는 외래키 부모가 일반 500 응답 | 미측정 | 데이터는 저장되지 않았음. 미해결로 기록하고 다음 세션에서 입력 검사·DB 오류 변환을 보완 |
+| 작업 인계 | 개발 소스는 진전됐지만 AGENTS·README의 현재 상태가 이전 단계에 머묾 | 미측정 | 공개/개발 상태를 분리하고 실제 테스트 결과·수정할 함수·다음 순서를 함께 기록 |
+
+### 백업 직전 재검증
+
+- `npm test`: 74개 통과, 실패 0. `tsc --noEmit`과 `git diff --check`도 통과했다.
+- `.env`, `node_modules/`, `*.tgz`, `dist/`의 Git 제외를 확인했다.
+- 이번 백업 단계에서는 실제 MySQL 검사를 반복하지 않았다. 앞선 실제 DB 검사의 미해결 4건은 그대로 남아 있다.
